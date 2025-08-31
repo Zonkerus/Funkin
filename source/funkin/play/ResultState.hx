@@ -566,7 +566,7 @@ class ResultState extends MusicBeatSubState
           clearPercentCounter.curNumber = clearPercentTarget;
 
           #if FEATURE_NEWGROUNDS
-          var isScoreValid = !(params?.isPracticeMode ?? false) && !(params?.isBotPlayMode ?? false);
+          var isScoreValid = !(params?.isPracticeMode ?? false);
           // This is the easiest spot to do the medal calculation lol.
           if (isScoreValid && clearPercentTarget == 69) Medals.award(Nice);
           #end
@@ -977,7 +977,7 @@ class ResultState extends MusicBeatSubState
       }
       else
       {
-        var isScoreValid = !(params?.isPracticeMode ?? false) && !(params?.isBotPlayMode ?? false);
+        var isScoreValid = !(params?.isPracticeMode ?? false);
         var isPersonalBest = rank > Scoring.calculateRank(params?.prevScoreData);
 
         if (isScoreValid && isPersonalBest)
