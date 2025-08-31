@@ -667,7 +667,7 @@ class PlayState extends MusicBeatSubState
     if (params.targetVariation != null) currentVariation = params.targetVariation;
     if (params.targetInstrumental != null) currentInstrumental = params.targetInstrumental;
     isPracticeMode = params.practiceMode ?? false;
-    isBotPlayMode = params.botPlayMode ?? false;
+    isBotPlayMode = true;
     isMinimalMode = params.minimalMode ?? false;
     startTimestamp = params.startTimestamp ?? 0.0;
     playbackRate = params.playbackRate ?? 1.0;
@@ -2436,7 +2436,8 @@ class PlayState extends MusicBeatSubState
     // TODO: Add functionality for modules to update the score text.
     if (isBotPlayMode)
     {
-      scoreText.text = 'Bot Play Enabled';
+      var commaSeparated:Bool = true;
+      scoreText.text = 'Bot Score: ${FlxStringUtil.formatMoney(songScore, false, commaSeparated)}';
     }
     else
     {
@@ -2547,25 +2548,12 @@ class PlayState extends MusicBeatSubState
       var r = GRhythmUtil.processWindow(note, !isBotPlayMode);
       if (r.botplayHit)
       {
-        // We call onHitNote to play the proper animations,
-        // but not goodNoteHit! This means zero score and zero notes hit for the results screen!
-
-        // Call an event to allow canceling the note hit.
-        // NOTE: This is what handles the character animations!
-        var event:NoteScriptEvent = new HitNoteScriptEvent(note, 0.0, 0, 'perfect', false, 0);
-        dispatchEvent(event);
-
-        // Calling event.cancelEvent() skips all the other logic! Neat!
-        if (event.eventCanceled) continue;
-
-        // Command the bot to hit the note on time.
-        // NOTE: This is what handles the strumline and cleaning up the note itself!
-        playerStrumline.hitNote(note);
-
-        if (note.holdNoteSprite != null)
-        {
-          playerStrumline.playNoteHoldCover(note.holdNoteSprite);
-        }
+        // Создаём фейковое событие нажатия, чтобы goodNoteHit сработал
+        var fakeInput:PreciseInputEvent = {
+            noteDirection: note.noteData.getDirection(),
+            timestamp: PreciseInputManager.getCurrentTimestamp()
+        };
+        goodNoteHit(note, fakeInput);
       }
       if (!r.cont) continue;
 
@@ -3168,7 +3156,7 @@ class PlayState extends MusicBeatSubState
       Leaderboards.submitSongScore(currentSong.id, suffixedDifficulty, songScore);
       #end
 
-      if (!isPracticeMode && !isBotPlayMode)
+      if (!isPracticeMode)
       {
         #if FEATURE_NEWGROUNDS
         Events.logCompleteSong(currentSong.id, currentVariation);
@@ -3187,7 +3175,7 @@ class PlayState extends MusicBeatSubState
 
     #if FEATURE_NEWGROUNDS
     // Only award medals if we are LEGIT.
-    if (!isPracticeMode && !isBotPlayMode && !isChartingMode && currentSong.validScore)
+    if (!isPracticeMode && !isChartingMode && currentSong.validScore)
     {
       // Award a medal for beating at least one song on any difficulty on a Friday.
       if (Date.now().getDay() == 5) Medals.award(FridayNight);
